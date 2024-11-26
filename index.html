@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Exam Score Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            line-height: 1.6;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .error {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Final Exam Score Calculator</h1>
+    <p>Enter your grades to calculate the score needed on your final exam to pass:</p>
+
+    <div>
+        <h3>Partial Exams (each 22%)</h3>
+        <input type="number" id="partial1" placeholder="Partial 1 (%)" step="0.01" required>
+        <input type="number" id="partial2" placeholder="Partial 2 (%)" step="0.01" required>
+        <input type="number" id="partial3" placeholder="Partial 3 (%)" step="0.01" required>
+    </div>
+
+    <div>
+        <h3>Tasks (9%)</h3>
+        <p>Enter the scores of tasks where you scored less than 100% (leave blank if none):</p>
+        <textarea id="lowTasks" placeholder="e.g., 85, 90, 78"></textarea>
+    </div>
+
+    <button onclick="calculate()">Calculate</button>
+    <div id="result"></div>
+
+    <script>
+        function calculate() {
+            // Get input values
+            const partial1 = parseFloat(document.getElementById("partial1").value);
+            const partial2 = parseFloat(document.getElementById("partial2").value);
+            const partial3 = parseFloat(document.getElementById("partial3").value);
+            const lowTasksInput = document.getElementById("lowTasks").value;
+
+            const desiredGrade = 65; // Fixed desired grade
+
+            // Validate inputs
+            if (
+                isNaN(partial1) || isNaN(partial2) || isNaN(partial3)
+            ) {
+                document.getElementById("result").innerHTML = "<span class='error'>Please enter valid partial grades.</span>";
+                return;
+            }
+
+            // Constants
+            const TASK_WEIGHT = 9; // 9% of the grade
+            const PARTIAL_WEIGHT = 22; // 22% per partial
+            const FINAL_WEIGHT = 25; // 25% for the final exam
+            const TOTAL_TASKS = 27;
+            const MAX_TASK_SCORE = 100;
+
+            // Calculate total points scored in tasks
+            let totalTaskScore = TOTAL_TASKS * MAX_TASK_SCORE; // Assume 100% in all tasks
+            if (lowTasksInput.trim() !== "") {
+                const lowTaskScores = lowTasksInput.split(",").map(score => parseFloat(score.trim()));
+                if (lowTaskScores.some(isNaN)) {
+                    document.getElementById("result").innerHTML = "<span class='error'>Please enter valid scores for tasks.</span>";
+                    return;
+                }
+                const missedPoints = lowTaskScores.reduce((sum, score) => sum + (MAX_TASK_SCORE - score), 0);
+                totalTaskScore -= missedPoints; // Subtract missed points
+            }
+
+            // Contribution of tasks to grade
+            const taskPercentage = (totalTaskScore / (TOTAL_TASKS * MAX_TASK_SCORE)) * TASK_WEIGHT;
+
+            // Find the lowest partial grade
+            const partials = [partial1, partial2, partial3];
+            const lowestPartial = Math.min(...partials);
+            const partialPercentageWithoutReplacement = (
+                (partial1 * PARTIAL_WEIGHT / 100) +
+                (partial2 * PARTIAL_WEIGHT / 100) +
+                (partial3 * PARTIAL_WEIGHT / 100)
+            );
+
+            // Calculate the score needed on the final exam
+            let requiredFinalExam = (desiredGrade - (taskPercentage + partialPercentageWithoutReplacement)) / (FINAL_WEIGHT / 100);
+
+            // Check if final exam can replace the lowest partial
+            if (requiredFinalExam > lowestPartial) {
+                const partialPercentageWithReplacement = (
+                    (partials.reduce((sum, grade) => sum + grade, 0) - lowestPartial + requiredFinalExam) * PARTIAL_WEIGHT / 100 / 3
+                );
+                requiredFinalExam = (desiredGrade - (taskPercentage + partialPercentageWithReplacement)) / (FINAL_WEIGHT / 100);
+            }
+
+            // Display the result
+            if (requiredFinalExam > 100) {
+                document.getElementById("result").textContent = `You need ${requiredFinalExam.toFixed(2)}% on the final exam, which is impossible.`;
+            } else if (requiredFinalExam < 0) {
+                document.getElementById("result").textContent = "You already have enough points to achieve your desired grade!";
+            } else {
+                document.getElementById("result").textContent = `You need ${requiredFinalExam.toFixed(2)}% on the final exam.`;
+            }
+        }
+    </script>
+</body>
+</html>
