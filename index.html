@@ -92,17 +92,19 @@
             const lowestPartialGrade = partials[lowestPartialIndex];
 
             // Calculate the required final exam score to replace the lowest partial and pass
-            let requiredFinalExam = (desiredGrade - taskPercentage 
-                - (partials.reduce((sum, grade) => sum + (grade * PARTIAL_WEIGHT / 100), 0)
-                - (lowestPartialGrade * PARTIAL_WEIGHT / 100))) / ((FINAL_WEIGHT + PARTIAL_WEIGHT) / 100);
+            const otherPartials = partials.filter((_, index) => index !== lowestPartialIndex); // Remaining partials
+            const otherPartialPercentage = otherPartials.reduce((sum, grade) => sum + (grade * PARTIAL_WEIGHT / 100), 0);
+
+            const combinedWeight = FINAL_WEIGHT + PARTIAL_WEIGHT; // Weight of final + lowest partial
+            const neededFinalExam = (desiredGrade - taskPercentage - otherPartialPercentage) / (combinedWeight / 100);
 
             // Display the result
-            if (requiredFinalExam > 100) {
-                document.getElementById("result").textContent = `You need ${requiredFinalExam.toFixed(2)}% on the final exam, which is impossible.`;
-            } else if (requiredFinalExam < 0) {
+            if (neededFinalExam > 100) {
+                document.getElementById("result").textContent = `You need ${neededFinalExam.toFixed(2)}% on the final exam, which is impossible.`;
+            } else if (neededFinalExam < 0) {
                 document.getElementById("result").textContent = "You already have enough points to achieve your desired grade!";
             } else {
-                document.getElementById("result").textContent = `You need ${requiredFinalExam.toFixed(2)}% on the final exam.`;
+                document.getElementById("result").textContent = `You need ${neededFinalExam.toFixed(2)}% on the final exam.`;
             }
         }
     </script>
