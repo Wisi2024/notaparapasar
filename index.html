@@ -88,21 +88,26 @@
 
             // Find the lowest partial grade
             const partials = [partial1, partial2, partial3];
-            const lowestPartial = Math.min(...partials);
+            const lowestPartialIndex = partials.indexOf(Math.min(...partials));
             const partialPercentageWithoutReplacement = (
                 (partial1 * PARTIAL_WEIGHT / 100) +
                 (partial2 * PARTIAL_WEIGHT / 100) +
                 (partial3 * PARTIAL_WEIGHT / 100)
             );
 
-            // Calculate the score needed on the final exam
+            // Calculate required final exam score WITHOUT replacement
             let requiredFinalExam = (desiredGrade - (taskPercentage + partialPercentageWithoutReplacement)) / (FINAL_WEIGHT / 100);
 
-            // Check if final exam can replace the lowest partial
-            if (requiredFinalExam > lowestPartial) {
+            // Adjust calculations if final exam replaces lowest partial
+            if (requiredFinalExam > partials[lowestPartialIndex]) {
+                // Replace the lowest partial with the final exam
+                const newPartials = [...partials];
+                newPartials[lowestPartialIndex] = requiredFinalExam;
+
                 const partialPercentageWithReplacement = (
-                    (partials.reduce((sum, grade) => sum + grade, 0) - lowestPartial + requiredFinalExam) * PARTIAL_WEIGHT / 100 / 3
+                    (newPartials.reduce((sum, grade) => sum + grade, 0)) * PARTIAL_WEIGHT / 100 / 3
                 );
+
                 requiredFinalExam = (desiredGrade - (taskPercentage + partialPercentageWithReplacement)) / (FINAL_WEIGHT / 100);
             }
 
